@@ -1,0 +1,35 @@
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+  pre-build:
+    commands:
+      - echo "Logging into Amazon ECR"
+      - aws --version
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 517134460951.dkr.ecr.us-east-1.amazonaws.com
+      - REPOSITORY_URI=517134460951.dkr.ecr.us-east-1.amazonaws.com/book_gateway
+      - IMAGE_TAG=build-$(echo CODEBUILD_BUILD_ID | awk -F ":" '{print $2}')
+  build:
+    commands:
+      - echo "Build started on 'date'"
+      - echo "Building the jar file"
+      - mvn clean install
+      - echo "Building the docker image"
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post-build:
+    commands:
+      - echo "Build completed on 'date'"
+      - echo "Pushing the docker image"
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Writing image definitions file"
+      - DOCKER_CONTAINER_NAME=book_gateway
+      - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - echo $DOCKER_CONTAINER_NAME
+      - echo printing imagedefinitions.json
+      - cat imagedefinitions.json
+artifacts:
+  files:
+    - imagedefinitions.json
+    - target/springboot-aws-deploy.jar

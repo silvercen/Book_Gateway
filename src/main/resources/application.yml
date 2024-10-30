@@ -1,7 +1,7 @@
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://book_eureka:8761/eureka/
 server:
   port: 5962
 spring:
@@ -14,18 +14,18 @@ spring:
           enabled: true
       routes:
         - id: authormanagement
-          uri: http://localhost:5960
+          uri: http://author_management:5960
           predicates:
             - Path=/authors/**
           filters:
             - AuthenticationFilter
         - id: bookmanagement
-          uri: http://localhost:5959
+          uri: http://bookmanagement:5959
           predicates:
             - Path=/bookapi/**
           filters:
             - AuthenticationFilter
         - id: Book_Authentication
-          uri: http://localhost:5961
+          uri: http://book_authentication:5961
           predicates:
             - Path=/auth/**
